@@ -1,0 +1,8 @@
+man number <command>
+number:
+1 - command
+2 - system calls
+3 - C library functions
+
+Program that print number from 1 to N, where N is an argument of the command line
+
