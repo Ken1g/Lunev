@@ -1,0 +1,75 @@
+gdb -p <pid>
+
+ltrace ls //for the C-calls
+strace a.out //write down all the system calls, which were called along the program
+strace -p <pid>
+strace -f 
+
+ps -anf //the tree of all process
+kill -kill <>
+fg //restart the process and block the shell
+bg //restart the process 
+
+ctrl+R //search along shell
+
+
+system call fork()
+
+{
+	pid = fork();
+	if (pid == 0)
+	{
+		<child>
+	}
+	else if (pid < 0)
+	{
+		<error>
+	}
+	else
+	{
+		<parent>
+	}
+}
+
+В родительском процессе код возврата fork - идентификатор порожденного процесса
+В дочернем процессе код возврата ноль
+
+system call wait(status)
+
+{
+	pid = wait(status);
+}
+
+system calls
+execl(все аргументы перечисляются в отдельных параметрах, не ищет по путям)
+execle
+execlp(ищет по путям)
+execv(аргументы передаются в виде массива)
+execle(&env)
+execvp
+
+Задача 1:
+Породить N детей, где N - аргумент командной строки, каждый ребенок должен напечать число - номер, под которым он порожден
+Ожидается, что числа будут не по порядку
+
+Задача 2:
+Написать такой процесс (./a.out ls -a -l -s)
+
+
+getpid() //get an id of current process
+getppid() //
+getuid()
+getluid()
+getgid()
+getsid()
+
+Нити - это группа процессов с общей памятью. В остальном они ничем не отличаются от процессов
+Создание нитей:
+
+pthread_create(&tid, NULL, function, arg)
+pthread_exit() // 
+pthread_join() // аналог wait()
+-lpthread
+
+
+
