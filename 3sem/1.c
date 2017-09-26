@@ -1,69 +1,53 @@
-#define INCORRECT_INPUT         -100
-#define NOT_A_NUMBER            -101
-#define FORK_ERR                -102
+#define PIPE_CREATION_ERROR 	-100
+#define CANT_FORK_CHILD		-101
+#define CANT_OPEN_FILE		-102
 
-#define MAX_LENGTH 10
+#define BLOCK_SIZE 16000
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <malloc.h>
+#include <stdio.h>
 #include <fcntl.h>
+#include <malloc.h>
+#include <stdlib.h>
 
 int main(int argc, char** argv)
 {
-        long i, N;
-        char* endptr;
-	char* fullstr;
-	pid_t p;
-	int pipefd[2];
+	int pd[2], result, fd;
+	size_t size;
+	char* mystr = (char*) calloc(BLOCK_SIZE, sizeof(char));
 
-        if (argc != 2)
-        {
-                printf("INCORRECT_INPUT\n");
-                return INCORRECT_INPUT;
-        }
-        errno = 0;
-        N = strtol(argv[1], &endptr, 0);
-        if ((errno == ERANGE && (N == LONG_MAX || N == LONG_MIN)) || (errno != 0 && N == 0))
-        {
-                printf("INCORRECT_INPUT\n");
-                return INCORRECT_INPUT;
-        }
-        if (*endptr)
-        {
-                printf("NOT_A_NUMBER\n");
-                return NOT_A_NUMBER;
-        }
-
-	res = pipe(pipefd);
-	p = fork();
-	if (p == 0)
+	if (pipe(pd) < 0)
 	{
-		FILE* input = fopen("input.txt", "r");
-		fullstr = fgets(fullstr, MAX_LENGTH, input);
+		printf("PIPE_CREATION_ERROR");
+		return PIPE_CREATION_ERROR;
 	}
-	else if (p < 0)
+	result = fork();
+	if (result < 0)
 	{
-		printf("FORK_ERR");
-		return FORK_ERR;
+		printf("CANT_FORK_CHILD");
+		return CANT_FORK_CHILD;
+	}
+	else if (result == 0)
+	{
+		close(pd[0]);
+		if ((fd = open("myfile", O_RDONLY)) < 0)
+		{
+			printf("CANT_OPEN_FILE");
+			return CANT_OPEN_FILE;
+		}
+		size = read(fd, mystr, BLOCK_SIZE);		
+		size = write(pd[1], mystr, BLOCK_SIZE);
+		close(pd[1]);
 	}
 	else
 	{
-
+		close(pd[1]);
+		size = read(pd[0], mystr, BLOCK_SIZE);
+		printf("%s", mystr);
+		close(pd[0]);
 	}
+	free(mystr);
 	
-
-	
-	
-	
-
-
-
-
-
-        return 0;
+	return 0;
 }
-

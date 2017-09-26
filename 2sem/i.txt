@@ -55,6 +55,8 @@ execvp
 Задача 2:
 Написать такой процесс (./a.out ls -a -l -s)
 
+Задача 3:
+Решить задачу 1 с помощью тредов
 
 getpid() //get an id of current process
 getppid() //
