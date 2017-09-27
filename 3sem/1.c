@@ -38,6 +38,7 @@ int main(int argc, char** argv)
 		}
 		size = read(fd, mystr, BLOCK_SIZE);		
 		size = write(pd[1], mystr, BLOCK_SIZE);
+		close(fd);
 		close(pd[1]);
 	}
 	else
