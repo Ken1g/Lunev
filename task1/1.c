@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 		printf("CANT_OPEN_FILE");
 		return CANT_OPEN_FILE;
 	}
+	sleep(10);
 	if ((ffd = open(name, O_WRONLY | O_NONBLOCK)) < 0)
 	{
 		printf("CANT_OPEN_FIFO_FOR_WR");
@@ -53,7 +54,11 @@ int main(int argc, char** argv)
 		return CANT_OPEN_FIFO_FOR_WR;
 	}
 	while (size = read(fld, mystr, BLOCK_SIZE))
+	{
 		size = write(ffd, mystr, size);
+		printf("GET\n");
+		sleep(2);
+	}
 	close(ffd);
 	close(fld);
 	free(mystr);
