@@ -26,6 +26,7 @@ int main(int argc, char** argv)
 	pid_t p;	
 	key_t k;
 	     
+//////////////// Reading Command line data ////////////////
 	if (argc != 2)
         {
                 printf("INCORRECT_INPUT\n");
@@ -43,12 +44,13 @@ int main(int argc, char** argv)
                 printf("NOT_A_NUMBER\n");
                 return NOT_A_NUMBER;
         }
+//////////////// The main part of the task //////////////////
 	k = ftok(fnm, 1);
 	if ((msqid = msgget(k, 0666 | IPC_CREAT)) < 0)
 	{
 		printf("CANT_GET_MSQID");
 		return CANT_GET_MSQID;
-	}
+	}	
 	for (i = 0; i < N; i++)
 	{
 		p = fork();
@@ -57,12 +59,13 @@ int main(int argc, char** argv)
 			if (i == 0)
 			{
 				buf.mtype = N + 1;
-				for (j = 0; j < N - 1; j++)
+				for (j = 0; j < (N - 1); j++)
 					msgsnd(msqid, (mybuf*) &buf, 0, 0);
 				for (j = 0; j < N; j++)
 				{
-					buf.mtype = j + 2;
+					buf.mtype = j + 1;
 					msgsnd(msqid, (mybuf*) &buf, 0, 0);
+					printf("SENT\n");
 				}
 			}
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
