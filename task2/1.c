@@ -23,6 +23,7 @@ int main(int argc, char** argv)
         char *endptr;
 	char fnm[] = "1.c";
 	mybuf buf;
+	struct msqid_ds rmbuf;
 	pid_t p;	
 	key_t k;
 	     
@@ -65,29 +66,34 @@ int main(int argc, char** argv)
 				{
 					buf.mtype = j + 1;
 					msgsnd(msqid, (mybuf*) &buf, 0, 0);
-					printf("SENT\n");
 				}
 			}
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
 			errno = 0;
 			msgrcv(msqid, (mybuf*) &buf, 0, N + 1, IPC_NOWAIT);
-			if (errno == EAGAIN)
+			if (errno == ENOMSG)
 			{
 				buf.mtype = 1;
 				msgsnd(msqid, (mybuf*) &buf, 0, 0);
 			}
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
-			printf("%ld\n", i + 1);
+			printf("%ld ", i + 1);
 			buf.mtype = i + 2;
-			msgsnd(msqid, (mybuf*) &buf, 0, 0);
+			if (i != N - 1)
+				msgsnd(msqid, (mybuf*) &buf, 0, 0);
+			else
+			{
+				msgctl(msqid, IPC_RMID, &rmbuf);
+				return 0;
+			}
 			break;
+			
 		}
 		else if (p < 0)
 		{
 			printf("FORK_ERR");
+			msgctl(msqid, IPC_RMID, &rmbuf);
 			return FORK_ERR;
 		}
 	}
-
-	return 0;
 }
