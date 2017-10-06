@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 		p = fork();
 		if (p == 0)
 		{
-			printf("%ld\n", i + 1);
+			printf("%ld ", i + 1);
 			break;
 		}
 		else if (p < 0)

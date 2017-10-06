@@ -19,14 +19,14 @@ typedef struct mybuf
 
 int main(int argc, char** argv)
 {
-	long i, j, N, msqid, status;
+        long i, j, N, msqid;
         char *endptr;
 	char fnm[] = "1.c";
 	mybuf buf;
 	struct msqid_ds rmbuf;
 	pid_t p;	
 	key_t k;
-
+	     
 //////////////// Reading Command line data ////////////////
 	if (argc != 2)
         {
@@ -49,24 +49,26 @@ int main(int argc, char** argv)
 	k = ftok(fnm, 1);
 	if ((msqid = msgget(k, 0666 | IPC_CREAT)) < 0)
 	{
-		printf("CANT_GET_MSQID\n");
+		printf("CANT_GET_MSQID");
 		return CANT_GET_MSQID;
 	}	
 	for (i = 0; i < N; i++)
 	{
 		p = fork();
 		if (p == 0)
-		{
+		{		
 			if (i == 0)
 			{
-				buf.mtype = N + 1;
 				for (j = 0; j < (N - 1); j++)
-					msgsnd(msqid, (mybuf*) &buf, 0, 0);
-				for (j = 0; j < N; j++)
 				{
-					buf.mtype = j + 1;
+					buf.mtype = N + 1;
 					msgsnd(msqid, (mybuf*) &buf, 0, 0);
+					buf.mtype = j + 1;
+                                        msgsnd(msqid, (mybuf*) &buf, 0, 0);
 				}
+				buf.mtype = N;
+				msgsnd(msqid, (mybuf*) &buf, 0, 0);
+
 			}
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
 			errno = 0;
@@ -76,24 +78,22 @@ int main(int argc, char** argv)
 				buf.mtype = 1;
 				msgsnd(msqid, (mybuf*) &buf, 0, 0);
 			}
-			errno = 0;
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
-			if (errno == EINVAL)
-				break;
-			printf("%ld \n", i + 1);
+			printf("%ld\n", i + 1);
 			buf.mtype = i + 2;
 			if (i != N - 1)
 				msgsnd(msqid, (mybuf*) &buf, 0, 0);
 			else
 			{
 				msgctl(msqid, IPC_RMID, &rmbuf);
-				break;
+				return 0;
 			}
 			break;
+			
 		}
 		else if (p < 0)
 		{
-			printf("FORK_ERR\n");
+			printf("FORK_ERR");
 			msgctl(msqid, IPC_RMID, &rmbuf);
 			return FORK_ERR;
 		}
