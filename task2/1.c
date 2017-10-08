@@ -18,6 +18,21 @@ typedef struct mybuf
 	long mtype;
 } mybuf;
 
+first_process_action(long* N, long* msqid)
+{
+	mybuf buf;
+	int j;
+
+	buf.mtype = *N + 1;
+        for (j = 0; j < (*N - 1); j++)
+        	msgsnd(*msqid, (mybuf*) &buf, 0, 0);
+        for (j = 0; j < *N; j++)
+        {
+    		buf.mtype = j + 1;
+                msgsnd(*msqid, (mybuf*) &buf, 0, 0);
+        }
+}
+
 int main(int argc, char** argv)
 {
 	long i, j, N, msqid;
@@ -25,8 +40,8 @@ int main(int argc, char** argv)
         char *endptr;
 	char fnm[] = "1.c";
 	mybuf buf;
-	struct msqid_ds rmbuf;
-	pid_t p;	
+	pid_t p;
+	struct msqid_ds rmbuf;	
 
 //////////////// Reading Command line data ////////////////
 	if (argc != 2)
@@ -58,16 +73,7 @@ int main(int argc, char** argv)
 		if (p == 0)
 		{
 			if (i == 0)
-			{
-				buf.mtype = N + 1;
-				for (j = 0; j < (N - 1); j++)
-					msgsnd(msqid, (mybuf*) &buf, 0, 0);
-				for (j = 0; j < N; j++)
-				{
-					buf.mtype = j + 1;
-					msgsnd(msqid, (mybuf*) &buf, 0, 0);
-				}
-			}
+				first_process_action(&N, &msqid);
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
 			errno = 0;
 			msgrcv(msqid, (mybuf*) &buf, 0, N + 1, IPC_NOWAIT);
@@ -100,5 +106,6 @@ int main(int argc, char** argv)
 	}
 	for (i = 0; i < N; i++)
 		wait(&status);
+	
 	return 0;	
 }
