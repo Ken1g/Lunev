@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/wait.h>
 
 typedef struct mybuf
 {
@@ -19,13 +20,13 @@ typedef struct mybuf
 
 int main(int argc, char** argv)
 {
-	long i, j, N, msqid, status;
+	long i, j, N, msqid;
+	int status;
         char *endptr;
 	char fnm[] = "1.c";
 	mybuf buf;
 	struct msqid_ds rmbuf;
 	pid_t p;	
-	key_t k;
 
 //////////////// Reading Command line data ////////////////
 	if (argc != 2)
@@ -46,8 +47,7 @@ int main(int argc, char** argv)
                 return NOT_A_NUMBER;
         }
 //////////////// The main part of the task //////////////////
-	k = ftok(fnm, 1);
-	if ((msqid = msgget(k, 0666 | IPC_CREAT)) < 0)
+	if ((msqid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT)) < 0)
 	{
 		printf("CANT_GET_MSQID\n");
 		return CANT_GET_MSQID;
@@ -98,4 +98,7 @@ int main(int argc, char** argv)
 			return FORK_ERR;
 		}
 	}
+	for (i = 0; i < N; i++)
+		wait(&status);
+	return 0;	
 }
