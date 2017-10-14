@@ -18,27 +18,11 @@ typedef struct mybuf
 	long mtype;
 } mybuf;
 
-first_process_action(long* N, long* msqid)
-{
-	mybuf buf;
-	int j;
-
-	buf.mtype = *N + 1;
-        for (j = 0; j < (*N - 1); j++)
-        	msgsnd(*msqid, (mybuf*) &buf, 0, 0);
-        for (j = 0; j < *N; j++)
-        {
-    		buf.mtype = j + 1;
-                msgsnd(*msqid, (mybuf*) &buf, 0, 0);
-        }
-}
-
 int main(int argc, char** argv)
 {
 	long i, j, N, msqid;
 	int status;
         char *endptr;
-	char fnm[] = "1.c";
 	mybuf buf;
 	pid_t p;
 	struct msqid_ds rmbuf;	
@@ -47,7 +31,7 @@ int main(int argc, char** argv)
 	if (argc != 2)
         {
                 printf("INCORRECT_INPUT\n");
-                return INCORRECT_INPUT;
+              	return INCORRECT_INPUT;
         }
         errno = 0;
         N = strtol(argv[1], &endptr, 0);
@@ -61,51 +45,45 @@ int main(int argc, char** argv)
                 printf("NOT_A_NUMBER\n");
                 return NOT_A_NUMBER;
         }
-//////////////// The main part of the task //////////////////
+//////////////// The main part of the task /////////////////
 	if ((msqid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT)) < 0)
 	{
 		printf("CANT_GET_MSQID\n");
 		return CANT_GET_MSQID;
-	}	
+	}
 	for (i = 0; i < N; i++)
 	{
 		p = fork();
 		if (p == 0)
 		{
-			if (i == 0)
-				first_process_action(&N, &msqid);
-			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
-			errno = 0;
-			msgrcv(msqid, (mybuf*) &buf, 0, N + 1, IPC_NOWAIT);
-			if (errno == ENOMSG)
+			if (i == (N - 1))
 			{
 				buf.mtype = 1;
-				msgsnd(msqid, (mybuf*) &buf, 0, 0);
+                        	msgsnd(msqid, (mybuf*) &buf, 0, 0);
 			}
 			errno = 0;
 			msgrcv(msqid, (mybuf*) &buf, 0, i + 1, 0);
-			if (errno == EINVAL)
-				break;
-			printf("%ld \n", i + 1);
-			buf.mtype = i + 2;
-			if (i != N - 1)
-				msgsnd(msqid, (mybuf*) &buf, 0, 0);
-			else
+			if ((errno == EIDRM) || (errno == EINVAL))
+				exit(FORK_ERR);
+			printf("%ld\n", i + 1);
+			if (i != (N - 1))
 			{
-				msgctl(msqid, IPC_RMID, &rmbuf);
-				break;
+				buf.mtype = i + 2;
+				msgsnd(msqid, (mybuf*) &buf, 0, 0);
 			}
-			break;
+			else
+				msgctl(msqid, IPC_RMID, &rmbuf);
+			exit(0);
 		}
 		else if (p < 0)
 		{
 			printf("FORK_ERR\n");
 			msgctl(msqid, IPC_RMID, &rmbuf);
-			return FORK_ERR;
+			exit(FORK_ERR);
 		}
 	}
 	for (i = 0; i < N; i++)
 		wait(&status);
-	
+		
 	return 0;	
 }
