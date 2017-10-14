@@ -26,6 +26,7 @@ int main(int argc, char** argv)
 	mybuf buf;
 	pid_t p;
 	struct msqid_ds rmbuf;	
+	char buff[BUFSIZ];
 
 //////////////// Reading Command line data ////////////////
 	if (argc != 2)
@@ -46,6 +47,7 @@ int main(int argc, char** argv)
                 return NOT_A_NUMBER;
         }
 //////////////// The main part of the task /////////////////
+	setvbuf(stdout, buff,  _IONBF, 0);
 	if ((msqid = msgget(IPC_PRIVATE, 0666 | IPC_CREAT)) < 0)
 	{
 		printf("CANT_GET_MSQID\n");
